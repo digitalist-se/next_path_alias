@@ -1,0 +1,9 @@
+next_path_alias.settings_form:
+  path: '/admin/config/services/next/path-alias'
+  defaults:
+    _title: 'Next.js Site Path Alias settings'
+    _form: 'Drupal\next_path_alias\Form\SettingsForm'
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE

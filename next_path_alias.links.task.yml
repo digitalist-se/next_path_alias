@@ -1,0 +1,6 @@
+next_path_alias.settings_form:
+  title: "Site Path Alias"
+  description: "Configure Next.js Site Path Alias"
+  route_name: next_path_alias.settings_form
+  base_route: next.settings
+  weight: 30

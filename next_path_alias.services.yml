@@ -1,0 +1,25 @@
+services:
+  next_path_alias.path_alias_manager:
+    class: Drupal\next_path_alias\NextSitePathAliasManager
+    decorates: path_alias.manager
+    arguments: [ '@next_path_alias.path_alias_manager.inner' ]
+
+  next_path_alias.site_context_handler:
+    class: Drupal\next_path_alias\SiteContextHandler
+    arguments: ['@config.factory', '@path.validator', '@entity_type.manager', '@next_path_alias.next_path_alias_helper']
+
+  next_path_alias.next_path_alias_helper:
+    class: Drupal\next_path_alias\NextPathAliasHelper
+    arguments: ['@config.factory', '@path.validator', '@entity_type.manager']
+
+  next_path_alias.path_processor:
+    class: Drupal\next_path_alias\PathProcessor
+    arguments: ['@config.factory']
+    tags:
+      - { name: path_processor_outbound, priority: 500 }
+
+  next_path_alias.event_subscriber:
+    class: Drupal\next_path_alias\EventSubscriber\EventSubscriber
+    arguments: ['@language_manager']
+    tags:
+      - { name: event_subscriber }

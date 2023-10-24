@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Next.js Site Path Alias module.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function next_path_alias_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'path_alias') {
+
+    $fields['next_sites'] = BaseFieldDefinition::create('string')
+      ->setLabel('Next.js sites')
+      ->setDescription('Next.js sites identification.')
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+
+    // Fix issue on uninstall.
+    // @todo Why is this necessary?
+    if (\Drupal::database()->schema()->tableExists('path_alias_revision__next_sites')) {
+      return $fields;
+    }
+  }
+}
+
+/**
+ * Implements hook_validation_constraint_alter().
+ */
+function next_path_alias_validation_constraint_alter(array &$definitions) {
+  if (isset($definitions['UniquePathAlias'])) {
+    $definitions['UniquePathAlias']['class'] = '\\Drupal\\next_path_alias\\Plugin\\Validation\\Constraint\\NextPathAliasConstraint';
+  }
+}
+
+/**
+ * Implements hook_next_site_preview_alter().
+ */
+function next_path_alias_next_site_preview_alter(array &$preview, array $context) {
+
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+  $entity = $context['entity'];
+
+  /** @var \Drupal\pathauto\PathautoFieldItemList $path_alias_item */
+  $path_alias_item = $context['entity']->get('path');
+
+  // If there is an alias, add the URL to the preview.
+  // @todo This is actually quite arbitrary. Next allows any module to use
+  // whatever template they want. Might be a better solution to just add the
+  // {{ url }} variable and move to a "custom" module, with some explanation
+  // in readme.
+  if ($path_alias_item->alias) {
+    $preview['toolbar']['info']['#template'] = '<p><span class="heading-f">{{title}} ({{ bundle }})</span><br />{{ url }}</p>';
+    $preview['toolbar']['info']['#context']['url'] = $entity->toUrl('canonical', ['alias' => FALSE])->toString();
+  }
+}

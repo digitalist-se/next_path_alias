@@ -1,0 +1,10 @@
+name: Next.js Site Path Alias
+type: module
+description: Allows to create content with the same path alias for different Next.js decoupled sites.
+package: Web services
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:path_alias
+  - next:next
+  - decoupled_router:decoupled_router
+  - pathauto:pathauto

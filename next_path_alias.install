@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Next.js Site Path Alias.
+ */
+
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+
+/**
+ * Implements hook_install().
+ */
+function next_path_alias_install() {
+  $field_storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel('Next.js sites')
+    ->setDescription('Next.js sites identification.')
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+
+  \Drupal::entityDefinitionUpdateManager()->installFieldStorageDefinition(
+    'next_sites',
+    'path_alias',
+    'path_alias',
+    $field_storage_definition
+  );
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function next_path_alias_uninstall() {
+
+  $entity_definition_update_manager = Drupal::entityDefinitionUpdateManager();
+
+  // Delete the storage definition if it was defined before.
+  $storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('next_sites', 'path_alias');
+  if ($storage_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($storage_definition);
+  }
+}
