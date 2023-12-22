@@ -19,9 +19,6 @@ class NextPathAliasServiceProvider extends ServiceProviderBase {
       $container->getDefinition('pathauto.alias_uniquifier')
         ->setClass('Drupal\next_path_alias\AliasUniquifier')
         ->addArgument($container->getDefinition('next_path_alias.site_context_handler'));
-      $container->getDefinition('pathauto.alias_storage_helper')
-        ->setClass('Drupal\next_path_alias\AliasStorageHelper')
-        ->addArgument($container->getDefinition('next_path_alias.site_context_handler'));
     }
     if (isset($modules['unique_alias_checker'])) {
       $container->getDefinition('unique_alias_checker')

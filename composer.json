@@ -1,0 +1,16 @@
+{
+    "name": "drupal/next_path_alias",
+    "description": "Next.js Site Path Alias",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/next_path_alias",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/next_path_alias",
+        "source": "https://cgit.drupalcode.org/next_path_alias"
+    },
+    "require": {
+        "drupal/pathauto": "*",
+        "next:next": "*",
+        "decoupled_router:decoupled_router": "*"
+    }
+}

@@ -31,7 +31,7 @@ class SettingsForm extends ConfigFormBase {
     $form['sites_field_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Sites field name'),
-      '#description' => $this->t('The name of the field that contains the sites a content is published into. This field must be a text field.'),
+      '#description' => $this->t('The name of the field that contains the sites a content is published into. This field must be an entity reference to <em>Next.js site</em> entity type.'),
       '#default_value' => $this->config('next_path_alias.settings')->get('sites_field_name'),
       '#required' => TRUE,
     ];
