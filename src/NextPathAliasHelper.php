@@ -61,7 +61,7 @@ class NextPathAliasHelper {
    */
   public function getEntityFromPath(?string $path): ?EntityInterface {
     // No entity can be extracted from an invalid path.
-    if (!$path || !$this->pathValidator->isValid($path)) {
+    if (!$path || !$this->pathValidator->getUrlIfValidWithoutAccessCheck($path)) {
       return NULL;
     }
 
