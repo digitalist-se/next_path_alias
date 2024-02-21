@@ -1,0 +1,81 @@
+name: Run tests
+
+on:
+  # Run on all push to main branch.
+  push:
+    branches: [ "main" ]
+
+  # Run on all pull requests.
+  pull_request:
+
+jobs:
+  build:
+    name: Drupal ${{ matrix.drupal-core }} - PHP ${{ matrix.php-versions }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        drupal-core: ['9.3.x']
+        php-versions: ['8.2']
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: drupal
+          MYSQL_DATABASE: drupal
+        ports:
+          - 3306/tcp
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Checkout Drupal core
+        uses: actions/checkout@v2
+        with:
+          repository: drupal/drupal
+          ref: ${{ matrix.drupal-core }}
+      - name: Checkout module
+        uses: actions/checkout@v2
+        with:
+          path: modules/next_path_alias
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          coverage: none
+          extensions: imagick, gd
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install Drupal core dependencies
+        run: |
+          composer --no-interaction --no-progress --prefer-dist --optimize-autoloader install
+
+      - name: Install module dependencies
+        run: |
+          composer config --no-plugins allow-plugins.cweagans/composer-patches true
+          composer --no-interaction --no-progress require \
+            drupal/pathauto \
+            drupal/next
+
+#      - name: Install Coder module
+#        run: |
+#          composer --dev --no-interaction --no-progress require \
+#            drupal/coder:8.3.13
+#
+#      - name: Check coding standards
+#        run: |
+#          ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+#          ./vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,install,js modules/next_path_alias
+      - name: Run PHPunit
+        run: |
+          cp modules/next_path_alias/.github/config/phpunit.xml .
+          ./vendor/bin/phpunit modules/next_path_alias/tests/src/Kernel/PathAliasUniquePerSite.php
