@@ -1,4 +1,4 @@
-name: Run tests
+name: Run PHP CS checks
 
 on:
   # Run on all push to main branch.
@@ -18,16 +18,6 @@ jobs:
       matrix:
         drupal-core: ['9.3.x']
         php-versions: ['8.2']
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: false
-          MYSQL_ROOT_PASSWORD: drupal
-          MYSQL_DATABASE: drupal
-        ports:
-          - 3306/tcp
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Checkout Drupal core
         uses: actions/checkout@v2
@@ -59,14 +49,12 @@ jobs:
         run: |
           composer --no-interaction --no-progress --prefer-dist --optimize-autoloader install
 
-      - name: Install module dependencies
+      - name: Install Coder module
         run: |
-          composer config --no-plugins allow-plugins.cweagans/composer-patches true
-          composer --no-interaction --no-progress require \
-            drupal/pathauto \
-            drupal/next
+          composer --dev --no-interaction --no-progress require \
+            drupal/coder:8.3.13
 
-      - name: Run PHPunit
+      - name: Check coding standards
         run: |
-          cp modules/next_path_alias/.github/config/phpunit.xml .
-          ./vendor/bin/phpunit modules/next_path_alias/tests/src/Kernel/PathAliasUniquePerSite.php
+          ./vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+          ./vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,install,js modules/next_path_alias
