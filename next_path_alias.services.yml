@@ -2,7 +2,7 @@ services:
   next_path_alias.path_alias_manager:
     class: Drupal\next_path_alias\NextSitePathAliasManager
     decorates: path_alias.manager
-    arguments: [ '@next_path_alias.path_alias_manager.inner' ]
+    arguments: [ '@next_path_alias.path_alias_manager.inner', '@entity_type.manager' ]
 
   next_path_alias.site_context_handler:
     class: Drupal\next_path_alias\SiteContextHandler
