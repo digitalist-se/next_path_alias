@@ -72,7 +72,7 @@ class SiteContextHandler {
    * @param string[] $site_ids
    *   The site ids.
    */
-  public function setSites($site_ids) {
+  public function setSites(array $site_ids) {
     $this->contextSites = $site_ids;
   }
 

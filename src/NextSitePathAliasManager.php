@@ -103,7 +103,7 @@ class NextSitePathAliasManager implements AliasManagerInterface {
    * @return string
    *   The path represented by alias, or the alias if no path was found.
    */
-  public function getPathByAliasOnSites($alias, $langcode, $site_ids, $strict = TRUE) {
+  public function getPathByAliasOnSites(string $alias, string $langcode, array $site_ids, bool $strict = TRUE) {
 
     $path_alias_storage = $this->entityTypeManager->getStorage('path_alias');
 
