@@ -3,8 +3,8 @@
 namespace Drupal\next_path_alias;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\path_alias\AliasManagerInterface;
-use Drupal\path_alias\Entity\PathAlias;
 
 /**
  * Decorates core path alias service to provide site context.
@@ -22,13 +22,23 @@ class NextSitePathAliasManager implements AliasManagerInterface {
   protected $aliasManagerInner;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new PathAliasManager object.
    *
    * @param \Drupal\path_alias\AliasManagerInterface $aliasManagerInner
    *   The inner alias manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(AliasManagerInterface $aliasManagerInner) {
+  public function __construct(AliasManagerInterface $aliasManagerInner, EntityTypeManagerInterface $entityTypeManager) {
     $this->aliasManagerInner = $aliasManagerInner;
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -95,14 +105,16 @@ class NextSitePathAliasManager implements AliasManagerInterface {
    */
   public function getPathByAliasOnSites($alias, $langcode, $site_ids, $strict = TRUE) {
 
-    $entity_ids = \Drupal::entityQuery('path_alias')
+    $path_alias_storage = $this->entityTypeManager->getStorage('path_alias');
+
+    $entity_ids = $path_alias_storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('alias', $alias)
       ->condition('langcode', $langcode)
       ->execute();
 
     $without_site_match = NULL;
-    foreach (PathAlias::loadMultiple($entity_ids) as $entity) {
+    foreach ($path_alias_storage->loadMultiple($entity_ids) as $entity) {
       $entity_site_ids = array_column($entity->get('next_sites')->getValue(), 'value');
       if (empty($entity_site_ids)) {
         $without_site_match = $entity->getPath();
