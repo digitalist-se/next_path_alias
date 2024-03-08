@@ -5,9 +5,12 @@
  * Primary module hooks for Next.js Site Path Alias module.
  */
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\path_alias\PathAliasInterface;
 
 /**
  * Implements hook_entity_base_field_info().
@@ -57,4 +60,61 @@ function next_path_alias_next_site_preview_alter(array &$preview, array $context
     $preview['toolbar']['info']['#template'] = '<p><span class="heading-f">{{title}} ({{ bundle }})</span><br />{{ url }}</p>';
     $preview['toolbar']['info']['#context']['url'] = $entity->toUrl('canonical', ['alias' => FALSE])->toString();
   }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function next_path_alias_entity_presave(EntityInterface $entity) {
+  // Set sites context when necessary so it can be used in
+  // hook_path_alias_presave() below.
+  if (_next_path_alias_applies_to_entity($entity)) {
+    \Drupal::service('next_path_alias.site_context_handler')->setSitesByContentEntity($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function next_path_alias_entity_update(EntityInterface $entity) {
+
+  if (!_next_path_alias_applies_to_entity($entity)) {
+    return;
+  }
+
+  // Trigger a path alias save. Path or Pathauto may trigger it too in some
+  // conditions but it's hard to know before-hand if they will trigger or not.
+  // So we trigger it here anyway.
+  // @see PathautoItem::postSave() and PathItem::postSave().
+  $internalPath = $entity->toUrl()->getInternalPath();
+  $current_path_alias = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['path' => '/' . $internalPath]);
+  if (!empty($current_path_alias)) {
+    reset($current_path_alias)->save();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function next_path_alias_path_alias_presave(PathAliasInterface $entity) {
+  $sites = \Drupal::service('next_path_alias.site_context_handler')->getSites();
+  if (!empty($sites)) {
+    $entity->set('next_sites', $sites);
+  }
+}
+
+/**
+ * Check if passed entity has path field.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity to be checked.
+ *
+ * @return bool
+ *   Whether the entity has path field.
+ */
+function _next_path_alias_applies_to_entity(EntityInterface $entity) {
+  return $entity instanceof ContentEntityInterface
+    && $entity->getEntityTypeId() != 'path_alias'
+    && $entity->hasField('path')
+    && $entity->hasField(\Drupal::service('next_path_alias.site_context_handler')->getSiteFieldName());
 }
